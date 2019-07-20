@@ -1,0 +1,34 @@
+{
+    "name": "presspwrd/replicator",
+    "description": "Tea, earl gray, hot.",
+    "type": "library",
+    "license": "MIT",
+    "repositories": [
+        {
+            "type": "composer",
+            "url": "https://satis.wpteamhub.com"
+        }
+    ],
+    "require": {
+        "league/flysystem": "^1.0",
+        "league/flysystem-ziparchive": "^1.0",
+        "league/climate": "^3.5",
+        "mustache/mustache": "^2.12"
+    },
+    "require-dev": {
+        "bluehost/wp-php-standards": "^1.0"
+    },
+    "autoload": {
+        "classmap": [
+            "src/"
+        ]
+    },
+    "scripts": {
+        "lint": [
+            "vendor/bin/phpcs . --standard=Bluehost"
+        ],
+        "clean": [
+            "vendor/bin/phpcbf . --standard=Bluehost"
+        ]
+    }
+}
