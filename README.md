@@ -34,7 +34,7 @@ Replicator is designed to be reused, extended and reduce bespoke code needed for
 
 ## Using The Command Class
 
-1.  In `class-command.php`,  `use` and set your Command class to extend `\PressPwrd\Replicator\Base` (or `\Common`).
+1.  In `class-command.php`,  `use` and set your Command class to extend `\PressCloud\Replicator\Base` (or `\Common`).
 2.  Create `public function __invoke( $args, $assoc_args ) {}`, receiving args from WP-CLI.
 3.  Inside the invoke magic method, run `$this->init()`.
 4.  Create `protected function init() {}` and default varaiables like `$this->templates`, `$this->destination`, and `$this->type`. You also should run `$this->replicator_init()` in this method.
