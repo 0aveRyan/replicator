@@ -32,7 +32,7 @@ Replicator is designed to be reused, extended and reduce bespoke code needed for
 4. `require_once vendor/autoload.php` in your project
 5. Add `class-command.php` to `/src`
 
-## Using The Command Class
+## Using The Command Classes
 
 1.  In `class-command.php`,  `use` and set your Command class to extend `\PressCloud\Replicator\Base` (or `\Common`).
 2.  Create `public function __invoke( $args, $assoc_args ) {}`, receiving args from WP-CLI.
