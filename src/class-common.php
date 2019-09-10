@@ -1,8 +1,8 @@
 <?php
 
-namespace PressPwrd\Replicator;
+namespace PressCloud\Replicator;
 
-use \PressPwrd\Replicator\Base;
+use \PressCloud\Replicator\Base;
 use \League\Flysystem\Adapter\Local;
 use \League\Flysystem\Filesystem;
 use \Mustache_Engine;

@@ -1,6 +1,6 @@
 <?php
 
-namespace PressPwrd\Replicator;
+namespace PressCloud\Replicator;
 
 use \WP_CLI\Utils;
 use \WP_CLI_Command;
