@@ -58,7 +58,7 @@ WP_CLI::add_command( 'my plugin builder', '\\My\\Plugin\\Builder\\Command' );
 <?php
 
 namespace My\Plugin\Builder;
-use \PressPwrd\Replicator\Common;
+use \PressCloud\Replicator\Common;
 
 class Command extends Common {
 
