@@ -1,4 +1,4 @@
-# Replicator
+# presscloud/replicator
 
 Replicator lets developers scaffold WordPress code projects using WP-CLI and Mustache Templates.
 
