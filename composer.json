@@ -1,8 +1,8 @@
 {
-    "name": "presscloud/replicator",
+    "name": "pressnitro/replicator",
     "description": "Tea, earl gray, hot.",
     "type": "library",
-    "license": "MIT",
+    "license": "gpl-2.0-or-later",
     "repositories": [
         {
             "type": "composer",
@@ -13,22 +13,26 @@
         "league/flysystem": "^1.0",
         "league/flysystem-ziparchive": "^1.0",
         "league/climate": "^3.5",
-        "mustache/mustache": "^2.12"
+        "mustache/mustache": "^2.13.0",
+        "vlucas/phpdotenv": "^4.1"
     },
     "require-dev": {
         "bluehost/wp-php-standards": "^1.0"
     },
     "autoload": {
+        "files": [
+            "lib/deburr.php"
+        ],
         "classmap": [
             "src/"
         ]
     },
     "scripts": {
         "lint": [
-            "vendor/bin/phpcs . --standard=Bluehost"
+            "vendor/bin/phpcs ."
         ],
         "clean": [
-            "vendor/bin/phpcbf . --standard=Bluehost"
+            "vendor/bin/phpcbf ."
         ]
     }
 }
