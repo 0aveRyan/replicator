@@ -1,119 +1,87 @@
-# presscloud/replicator
+# pressnitro/replicator
 
-Replicator lets developers scaffold WordPress code projects using WP-CLI and Mustache Templates.
+Replicator empowers developers to create new WordPress code projects from Mustache templates using WP-CLI.
 
-## How It Works
+_(This is the abstract library powering **[pressnitro/replicate-command](https://github.com/pressnitro/replicate-command)** -- consider extending from there first)._
 
-Replicator is a code scaffolding tool for WP-CLI using Mustache Templates, CLImate helpers and Flysystem Local file access.
+## Quick Start
 
-Replicator has zero dependencies on WordPress Core, so it can be used to build all kinds of custom WordPress products -- including WordPress installers -- using WP-CLI.
+#### Want to try Replicator? 
 
-Replicator is designed to be reused, extended and reduce bespoke code needed for a highly-customizable code scaffolding tool -- focus on making templates instead of building a code generator.
+1. `wp package install pressnitro/replicate-command`
+2. `wp replicate plugin|theme|package`
+3. 🎉 **new project replicated!**
 
-#### Included Features
-* Replicate Starter Projects in WP-CLI from Mustache Templates.
-* Scan destination directory for existing folder, offering to backup, partially overwrite -- leaving custom files alone or fully wipe and write.
-* Handle Project Licensing and README.md files out-of-the-box.
-* Easy side-loading of dynamically-generated files (example: composer.json or package.json files).
-* Export built files to local filesystem using league/flysystem (allowing for futher integrations).
-* Build powerful prompts, format terminal output and more using built-in league/climate helpers.
+#### Want to extend Replicator?
 
-## Setup
-1. `composer require presspwrd/replicator`
-2. `composer install`
-3. Add
-    ```json
-    "autoload": {
-        "classmap": [
-            "src/"
-        ]
-    }
-    ```
-4. `require_once vendor/autoload.php` in your project
-5. Add `class-command.php` to `/src`
+`composer install pressnitro/replicator`
 
-## Using The Command Classes
+&
 
-1.  In `class-command.php`,  `use` and set your Command class to extend `\PressCloud\Replicator\Base` (or `\Common`).
-2.  Create `public function __invoke( $args, $assoc_args ) {}`, receiving args from WP-CLI.
-3.  Inside the invoke magic method, run `$this->init()`.
-4.  Create `protected function init() {}` and default varaiables like `$this->templates`, `$this->destination`, and `$this->type`. You also should run `$this->replicator_init()` in this method.
-5.  Back in the invoke magic method, run `$this->setup()` after all data has been set via prompts/otherwise.
-6.  Create `protected function setup() {}`, setting `$this->structure` - keys are destination file paths, values are templates files in `$this->templates`.
-7.  Optionally, add `$this->sideload()` and inject prebuilt or dynamic files into `$this->files`.
-8.  At the botton of `$this->__invoke()`, trigger `$this->run()`.
+Follow the Basic Setup (Common Class vs. Base Class?)
 
-```php
-<?php // main file
-require_once dirname( __FILE__ ) . '/vendor/autoload.php';
+## What's it for?
 
-if ( ! class_exists( 'WP_CLI' ) ) {
-    return;
-}
+Replicator is designed to:
+* ⚡️ Make **starting** new WordPress projects _faster_.
+* 🗂 Make **unifying** code style and file organization across projects _easier_.
+* 📉 **Reduce & reuse** work involved in building _custom_ boilerplates.
 
-WP_CLI::add_command( 'my plugin builder', '\\My\\Plugin\\Builder\\Command' );
-```
+## Included Features
 
-```php
-<?php
+* 🔍 **Scan for existing folders and files**, with built-in handling of backups, override and deletion.
+* ➕ **Easy side-loading** of dynamic files (i.e. `composer.json` or `package.json`) or remotely-sourced files (i.e. hit the GitHub API for the latest copy of a file).
+* 📋 **Handles basic prompts** like labels, slugs, namespacing, author details and common metadata out-of-the-box.
+* 🗃 **Handles project licensing, README files and test setup** out-of-the-box.
+* 🛠 **Built for flexibility & extensibility** -- take on as many or as few opinions as you'd like!
+* 📚 **Tons of examples** -- check out the Wiki.
 
-namespace My\Plugin\Builder;
-use \PressCloud\Replicator\Common;
+## What's happening under-the-hood?
 
-class Command extends Common {
+* Replicator has **zero dependencies on WordPress Core** -- it can be used to build Installer/Setup commands -- and then use them!
+* Replicator **creates interactive prompts** using thephpleague/climate and internal WP-CLI utilities.
+* Replicator **interacts with the filesystem** using thephpleague/flysystem.
+* Replicator **renders Mustache templates** -- both included and custom -- using mustache/mustache.
+* Replicator will **write built files (or a .zip)** so you can _**start building WordPress products fast**_!
+* (Optional) Replicator **uses Environment Variables or PHP Constants to preset common values** like Author Name, Author Email, Author URL, GitHub Username, etc so you don't need to be prompted every time.
 
-    /**
-     * @param array $args - WP-CLI Positional Arguments.
-     * @param array $assoc_args - WP-CLI Flags & Associative Arguments.
-     */
-    $this->__invoke( $args, $assoc_args ) {
+## What's the Difference: `Common` vs. `Base` classes?
 
-        $this->init();
-        $this->generic_prompts(); // in \PressPwrd\Replicator\Common
-        $this->custom_prompts();
+`\PressNitro\Replicator\Common` and `PressNitro\Replicator\Base` are both abstract classes you can extend to build your own replication classes _(you can also extend the Plugin, Theme or Package classes in `pressnitro/replicate-command`)_.
 
-        $this->setup();
-        // $this->sideload();
+**The `Common` class extends the `Base` class.**
 
-        /**
-         * - $this->type, $this->templates, $this->destination, $this->slug, $this->data  must be set already.
-         */
-        $this->run();
+The Base Class...
+* Handles reading of a Templates directory and writing to the Destination directory.
+* Handles automatically setting the Destination directory based on  type of project (can be overriden).
+* Handles destination directory checks, backups and/or overrides.
+* (Optional) Handles .zip generation.
 
-    }
+The Common Class...
+* Handles common prompts for labels, slugs, namespaces, author and Project URLs.
+* Handles injecting a LICENSE file.
+* Handle injecting an organized README.md file.
 
-    protected function init() {
+## Disclaimers
 
-        $this->replicator_init();
+#### It's _strongly discouraged_ to use Replicator on a live production or staging server -- it's intended for local development only.
 
-        $this->type         = 'plugin';
-        $this->templates    = dirname( __FILE__ ) . '/templates';
-        $this->destination  = ! empty( $this->wp_dirs['plugins'] ) ? $this->wp_dirs['plugins'] : null;
-    }
+While it's _possible_ to run Replicator anywhere WP-CLI can run, it's strongly discouraged to run on a live, internet-connected server.
 
-    protected function setup() {
+**Replicator is not performance-tuned or security-tested for a live server.** Please use it with a tool like Lando, Docksal, MAMP, DesktopServer or Local by Flywheel either on your local machine or inside a local, virtual machine.
 
-        $this->structure = [
-            $this->slug . '.php'    => 'plugin.php', 
-            '.gitignore'            => 'gitignore',
-            'src/class-api.php'     => 'api-endpoint.php',
-            'assets/style.css'      => 'styles.css',
-            'assets/script.js'      => 'script.js',
-        ];
+#### Your mileage with WP-CLI on Windows may vary.
 
-    }
+If you're developing on Windows, please consider running Replicator inside a virtual Unix-based machine like VVV, Docker container, etc. Replicator aims to run smoothly in all environments, but is only checked in Unix-based environments.
 
-    protected function custom_prompts() {
+Also, the Radio Button and Checkbox inputs in CLImate don't work on Windows.
 
-        $api_endpoint                   = $this->cli->input( 'Plugin API Endpoint:' );
-        $api_endpoint->defaultTo( Utils\trailingslashit( $this->slug ) . '/data' );
+## License
 
-        $this->data['api_endpoint']     = $api_endpoint->prompt();
+Copyright (C) 2019 David Ryan
 
-    }
+Replicator is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
 
-    // protected function sideload() {
-    // }
-}
+Replicator is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 
-```
+You should have received a copy of the GNU General Public License along with Replicator. If not, see <https://www.gnu.org/licenses/>.
