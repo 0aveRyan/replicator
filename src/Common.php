@@ -5,11 +5,6 @@ use \WP_CLI;
 use \WP_CLI\Utils;
 use \League\Flysystem\Adapter\Local;
 use \League\Flysystem\Filesystem;
-use function _\camelCase;
-use function _\deburr;
-use function _\kebabCase;
-use function _\snakeCase;
-use function _\words;
 
 /**
  * Basic prompts for universal data and license handling.
@@ -51,7 +46,7 @@ abstract class Common extends Base {
 		'apache2'  => [
 			'label'	=> 'Apache 2.0',
 			'spdx'	=> 'Apache-2.0',
-			'url'	=> 'https://opensource.org/licenses/Apache-2.0',
+			'url'	=> 'https://www.apache.org/licenses/LICENSE-2.0.txt',
 		],
 		'gpl2'    => [],
 		'gpl3'    => [],
@@ -79,22 +74,22 @@ abstract class Common extends Base {
 		'gpl2only'  => [
 			'spdx'  => 'GPL-2.0-only',
 			'label' => 'GNU General Public License v2.0 only',
-			'url'	=> 'https://opensource.org/licenses/GPL-2.0',
+			'url'	=> 'https://www.gnu.org/licenses/old-licenses/gpl-2.0.txt',
 		],
 		'gpl2later' => [
 			'spdx'  => 'GPL-2.0-or-later',
 			'label' => 'GNU General Public License v2.0 or later',
-			'url'	=> 'https://opensource.org/licenses/GPL-2.0',
+			'url'	=> 'https://www.gnu.org/licenses/old-licenses/gpl-2.0.txt',
 		],
 		'gpl3only'  => [
 			'spdx'  => 'GPL-3.0-only',
 			'label' => 'GNU General Public License v3.0 only',
-			'url'	=> 'https://opensource.org/licenses/GPL-3.0',
+			'url'	=> 'https://www.gnu.org/licenses/gpl-3.0.txt',
 		],
 		'gpl3later' => [
 			'spdx'  => 'GPL-3.0-or-later',
 			'label' => 'GNU General Public License v3.0 or later',
-			'url'	=> 'https://opensource.org/licenses/GPL-3.0',
+			'url'	=> 'https://www.gnu.org/licenses/gpl-3.0.txt',
 		],
 	];
 
@@ -156,14 +151,13 @@ abstract class Common extends Base {
 
 		$this->handleConfigFiles();
 
-		if ( $this->handleTests ) {
-			// $this->cli->bold( 'Running tests...' );
-			// WP_CLI::add_hook(
-			// 	'after_invoke:replicate plugin',
-			// 	function() {
-			// 		WP_CLI::runcommand( 'scaffold plugin-tests ' . $this->slug );
-			// 	}
-			// );
+		if ( $this->handleTests && 'plugins' === $this->type ) {
+			WP_CLI::add_hook(
+				'after_invoke:replicate plugin',
+				function() {
+					WP_CLI::runcommand( 'scaffold plugin-tests ' . $this->slug );
+				}
+			);
 		}
 	}
 
@@ -350,12 +344,20 @@ abstract class Common extends Base {
 			'name'			=> $this->data['slug'],
 			'version'		=> $this->data['version'],
 			'description'	=> $this->data['desc'],
-			'author'		=> [
-				'name'	=> $this->data['creator_name'],
-				'email'	=> $this->data['creator_email'],
-				'url'	=> $this->data['creator_url'],
-			],
 		];
+
+		$author = [
+			'name'	=> $this->data['creator_name'],
+			'email'	=> $this->data['creator_email'],
+			'url'	=> $this->data['creator_url'],
+		];
+
+		if ( 'npm' === $type ) {
+			$package['author'] = $author;
+		} elseif ( 'composer' === $type ) {
+			unset( $author['url'] );
+			$package['authors'] = [ $author ];
+		}
 
 		if ( 'composer' === $type && ! empty( $this->data['creator_git_username'] ) ) {
 			$package['name'] = $this->data['creator_git_username'] . '/' . $this->data['slug'];

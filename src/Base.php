@@ -242,16 +242,12 @@ abstract class Base extends WP_CLI_Command {
 		} else {
 			$this->cli->error( sprintf( '%s already exists.', Utils\trailingslashit( $this->destination ) . $this->slug ) );
 
-			$backup_types = [
-				'backup'    => 'Backup - duplicates directory & deletes original',
-				'overwrite' => 'Overwrite or Insert - preserve custom files, only inserts/overwrites files with templates.',
-				'delete'    => 'Delete',
-			];
-
-			$this->cli->dump( $backup_types );
+			$this->cli->bold('Backup - duplicates directory & deletes original');
+			$this->cli->bold('Overwrite or Insert - preserve custom files, only inserts/overwrites files with templates.');
+			$this->cli->bold('Delete - remove existing copy and then replicate new files.');
 
 			$proceed_input = $this->cli->input( 'How would you like to proceed?' );
-			$proceed       = $proceed_input->accept( array_keys( $backup_types ), true )->prompt();
+			$proceed       = $proceed_input->accept( [ 'backup', 'overwrite', 'delete' ], true )->prompt();
 
 			if ( 'delete' === $proceed ) {
 				$delete = $this->cli->confirm( sprintf( 'Delete %1$s?', $this->slug ) );
@@ -264,11 +260,12 @@ abstract class Base extends WP_CLI_Command {
 			} elseif ( 'backup' === $proceed ) {
 				$this->cli->bold( 'Starting backup...' );
 				$files         = [];
+				$uid		   = \uniqid( 'backup_' );
 				foreach ( $this->destinationFS->listContents( $this->slug, true ) as $file ) {
 					if ( 'file' !== $file['type'] ) {
 						continue;
 					}
-					$file['new_path'] = str_ireplace( $this->slug, $this->slug . '-' . \uniqid( 'backup_' ), $file['path'] );
+					$file['new_path'] = str_ireplace( $this->slug, $this->slug . '-' . $uid, $file['path'] );
 					$files[]          = $file;
 				}
 				$this->cli->info( sprintf( 'Found %d files to backup...', count( $files ) ) );
@@ -390,7 +387,7 @@ abstract class Base extends WP_CLI_Command {
 			} else {
 				$this->cli->error( '⚠️ Failed: ' . $file )->br();
 			}
-			
+
 			$this->status['local'][] = [
 				'destination'  => $destination,
 				'partial_path' => $partial,

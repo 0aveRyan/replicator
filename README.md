@@ -1,14 +1,14 @@
-# pressnitro/replicator
+# 0aveRyan/replicator
 
 Replicator empowers developers to create new WordPress code projects from Mustache templates using WP-CLI.
 
-_(This is the abstract library powering **[pressnitro/replicate-command](https://github.com/pressnitro/replicate-command)** -- consider extending from there first)._
+_(This is the abstract library powering **[0aveRyan/replicate-command](https://github.com/0aveRyan/replicate-command)** -- consider extending from there first)._
 
 ## Quick Start
 
 #### Want to try Replicator? 
 
-1. `wp package install pressnitro/replicate-command`
+1. `wp package install 0aveRyan/replicate-command`
 2. `wp replicate plugin|theme|package`
 3. 🎉 **new project replicated!**
 
