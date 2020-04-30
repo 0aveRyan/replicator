@@ -2,7 +2,7 @@
     "name": "pressnitro/replicator",
     "description": "Tea, earl gray, hot.",
     "type": "library",
-    "license": "MIT",
+    "license": "gpl-2.0-or-later",
     "repositories": [
         {
             "type": "composer",
