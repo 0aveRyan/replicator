@@ -14,7 +14,7 @@ _(This is the abstract library powering **[0averyan/replicate-command](https://g
 
 #### Want to extend Replicator?
 
-`composer install pressnitro/replicator`
+`composer install 0averyan/replicator`
 
 &
 
@@ -47,7 +47,7 @@ Replicator is designed to:
 
 ## What's the Difference: `Common` vs. `Base` classes?
 
-`\PressNitro\Replicator\Common` and `PressNitro\Replicator\Base` are both abstract classes you can extend to build your own replication classes _(you can also extend the Plugin, Theme or Package classes in `pressnitro/replicate-command`)_.
+`\Replicator\Core\Common` and `Replicator\Core\Base` are both abstract classes you can extend to build your own replication classes _(you can also extend the Plugin, Theme or Package classes in `0aveRyan/replicate-command`)_.
 
 **The `Common` class extends the `Base` class.**
 
