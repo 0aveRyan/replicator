@@ -1,6 +1,7 @@
 {
     "name": "0averyan/replicator",
     "description": "Tea, earl gray, hot.",
+    "version": "0.1.1",
     "type": "library",
     "license": "gpl-2.0-or-later",
     "repositories": [
@@ -21,7 +22,7 @@
     },
     "autoload": {
         "psr-4": {
-            "Replicator\\Core\\": "inc/"
+            "Replicator\\Core\\": "src/"
         }
     },
     "scripts": {
