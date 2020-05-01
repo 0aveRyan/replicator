@@ -39,6 +39,16 @@ abstract class Common extends Base {
 	protected $commonFS = null;
 
 	/**
+	 * Composer.json Data
+	 */
+	protected $composer_data;
+
+	/**
+	 * Package.json Data
+	 */
+	protected $package_data;
+
+	/**
 	 * Types of licenses
 	 *
 	 * @var array
@@ -146,10 +156,6 @@ abstract class Common extends Base {
 			$this->licenseHandler();
 		}
 
-		if ( $this->handleReadme ) {
-			$this->readmeHandler();
-		}
-
 		$this->handleConfigFiles();
 
 		if ( $this->handleTests ) {
@@ -236,6 +242,8 @@ abstract class Common extends Base {
 			$namespace->defaultTo( $this->replicateDefaultNamespace() );
 			$this->data['namespace'] = $namespace->prompt();
 		}
+
+		$this->data['namespace_check'] = str_ireplace( '\\', '\\\\', $this->data['namespace'] );
 
 		$desc               = $this->cli->input( sprintf( '%s Description:', $this->labelType ) );
 		$this->data['desc'] = $desc->prompt();
@@ -334,16 +342,18 @@ abstract class Common extends Base {
 		}
 	}
 
-	protected function readmeHandler() {
-		//
+	protected function modifyConfigFiles() {
+		// Optionally override/update config files
 	}
 
 	protected function handleConfigFiles() {
-		$composer_data                = $this->replicateJSONFile( 'composer' );
-		$this->files['composer.json'] = json_encode( $composer_data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES );
+		$this->composer_data = $this->replicateJSONFile( 'composer' );
+		$this->package_data  = $this->replicateJSONFile( 'npm' );
 
-		$package_data                = $this->replicateJSONFile( 'npm' );
-		$this->files['package.json'] = json_encode( $package_data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES );
+		$this->modifyConfigFiles();
+
+		$this->files['composer.json'] 	= json_encode( $this->composer_data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES );
+		$this->files['package.json'] 	= json_encode( $this->package_data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES );
 	}
 
 	protected function replicateJSONFile( $type ) {
