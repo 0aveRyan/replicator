@@ -1,6 +1,6 @@
 <?php
 
-namespace PressNitro\Replicator;
+namespace Replicator\Core;
 
 use \WP_CLI\Utils;
 use \WP_CLI_Command;
@@ -56,7 +56,7 @@ abstract class Base extends WP_CLI_Command {
 	/**
 	 * Optional directory path containing .env file with REPLICATOR_* variables.
 	 * This defaults to using ABSPATH if available.
-	 * 
+	 *
 	 * @var null|string
 	 */
 	protected $envDir = null;
@@ -156,23 +156,23 @@ abstract class Base extends WP_CLI_Command {
 	 * @var array
 	 */
 	protected $typeMaps = [
-		'plugin'   => [ 'map' => 'plugins' ],
-		'theme'    => [ 'map' => 'themes' ],
-		'root'     => [ 'map' => 'abspath' ],
-		'package'  => [ 'map' => 'packages' ],
-		'wpcli'    => [ 'map' => 'packages' ],
-		'cmd'      => [ 'map' => 'packages' ],
+		'plugin'  => [ 'map' => 'plugins' ],
+		'theme'   => [ 'map' => 'themes' ],
+		'root'    => [ 'map' => 'abspath' ],
+		'package' => [ 'map' => 'packages' ],
+		'wpcli'   => [ 'map' => 'packages' ],
+		'cmd'     => [ 'map' => 'packages' ],
 	];
 
 	/**
 	 * Directory paths for WordPress
 	 *
 	 * Ex. array(
-	 *      'abspath' 		- webroot
-	 *      'wp-content' 	- webroot/wp-content
-	 *      'plugins' 		- webroot/wp-content/plugins
-	 *      'themes' 		- webroot/wp-content/themes
-	 *      'packages' 		- path/to/wp-cli/packages/local
+	 *      'abspath'       - webroot
+	 *      'wp-content'    - webroot/wp-content
+	 *      'plugins'       - webroot/wp-content/plugins
+	 *      'themes'        - webroot/wp-content/themes
+	 *      'packages'      - path/to/wp-cli/packages/local
 	 * )
 	 *
 	 * @var array
@@ -242,9 +242,9 @@ abstract class Base extends WP_CLI_Command {
 		} else {
 			$this->cli->error( sprintf( '%s already exists.', Utils\trailingslashit( $this->destination ) . $this->slug ) );
 
-			$this->cli->bold('Backup - duplicates directory & deletes original');
-			$this->cli->bold('Overwrite or Insert - preserve custom files, only inserts/overwrites files with templates.');
-			$this->cli->bold('Delete - remove existing copy and then replicate new files.');
+			$this->cli->bold( 'Backup - duplicates directory & deletes original' );
+			$this->cli->bold( 'Overwrite or Insert - preserve custom files, only inserts/overwrites files with templates.' );
+			$this->cli->bold( 'Delete - remove existing copy and then replicate new files.' );
 
 			$proceed_input = $this->cli->input( 'How would you like to proceed?' );
 			$proceed       = $proceed_input->accept( [ 'backup', 'overwrite', 'delete' ], true )->prompt();
@@ -259,8 +259,8 @@ abstract class Base extends WP_CLI_Command {
 				}
 			} elseif ( 'backup' === $proceed ) {
 				$this->cli->bold( 'Starting backup...' );
-				$files         = [];
-				$uid		   = \uniqid( 'backup_' );
+				$files = [];
+				$uid   = \uniqid( 'backup_' );
 				foreach ( $this->destinationFS->listContents( $this->slug, true ) as $file ) {
 					if ( 'file' !== $file['type'] ) {
 						continue;
@@ -285,8 +285,7 @@ abstract class Base extends WP_CLI_Command {
 	 * Load new patterns into the food replicator.
 	 */
 	protected function replicateFromTemplates() {
-		if ( 
-			empty( $this->structure )
+		if ( empty( $this->structure )
 			|| empty( $this->destination )
 		) {
 			$this->cli->error( 'Didn\'t have structure or destination.' );
@@ -360,7 +359,7 @@ abstract class Base extends WP_CLI_Command {
 	/**
 	 * Energize! Meet you in Transporter Room 3.
 	 *
-	 * Takes built file paths and built file contents 
+	 * Takes built file paths and built file contents
 	 * and writes them to the filesystem using Flysystem.
 	 */
 	protected function writeToDestination() {
@@ -473,7 +472,6 @@ abstract class Base extends WP_CLI_Command {
 			if ( empty( $this->wpDirs['themes'] ) ) {
 				$this->wpDirs['themes'] = $this->wpDirs['wp-content'] . '/themes';
 			}
-
 		}
 		if ( ! empty( $pkg_dir = getenv( 'WP_CLI_PACKAGES_DIR' ) ) ) {
 			$this->wpDirs['packages'] = $pkg_dir;
@@ -517,16 +515,16 @@ abstract class Base extends WP_CLI_Command {
 		if ( isset( $this->typeMaps[ $this->type ]['map'] ) ) {
 			$this->type = $this->typeMaps[ $this->type ]['map'];
 		}
-		
+
 		if ( empty( $this->destination ) && isset( $this->wpDirs[ $this->type ] ) ) {
 			$this->destination = $this->wpDirs[ $this->type ];
 		}
-		
+
 	}
 
 	/**
 	 * Load environment variables (or constants) and inject into $this->env without prefix.
-	 * 
+	 *
 	 * PHP Constants supercede environment variables.
 	 *
 	 * @return void
@@ -535,21 +533,19 @@ abstract class Base extends WP_CLI_Command {
 		if ( ! class_exists( '\\Dotenv\\Dotenv' ) ) {
 			return false;
 		}
-		if ( 
-			! empty( $this->envDir ) 
+		if ( ! empty( $this->envDir )
 			&& is_readable( $this->envDir . '/.env' )
 		) {
 			$dotenv = Dotenv::createImmutable( $this->envDir );
 			$dotenv->load();
-		} elseif ( 
-			defined( 'ABSPATH' ) 
+		} elseif ( defined( 'ABSPATH' )
 			&& is_readable( ABSPATH . '/.env' )
 		) {
 			$dotenv = Dotenv::createImmutable( ABSPATH );
 			$dotenv->load();
 		}
 
-		foreach( getenv() as $key => $value ) {
+		foreach ( getenv() as $key => $value ) {
 			if ( false === stripos( $key, 'REPLICATOR_' ) ) {
 				continue;
 			}

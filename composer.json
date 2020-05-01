@@ -1,5 +1,5 @@
 {
-    "name": "pressnitro/replicator",
+    "name": "0averyan/replicator",
     "description": "Tea, earl gray, hot.",
     "type": "library",
     "license": "gpl-2.0-or-later",
@@ -20,12 +20,9 @@
         "bluehost/wp-php-standards": "^1.0"
     },
     "autoload": {
-        "files": [
-            "lib/deburr.php"
-        ],
-        "classmap": [
-            "src/"
-        ]
+        "psr-4": {
+            "Replicator\\Core\\": "inc/"
+        }
     },
     "scripts": {
         "lint": [

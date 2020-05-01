@@ -1,6 +1,7 @@
 <?php
 
-namespace PressNitro\Replicator;
+namespace Replicator\Core;
+
 use \WP_CLI;
 use \WP_CLI\Utils;
 use \League\Flysystem\Adapter\Local;
@@ -43,22 +44,22 @@ abstract class Common extends Base {
 	 * @var array
 	 */
 	protected $licenses = [
-		'apache2'  => [
-			'label'	=> 'Apache 2.0',
-			'spdx'	=> 'Apache-2.0',
-			'url'	=> 'https://www.apache.org/licenses/LICENSE-2.0.txt',
+		'apache2' => [
+			'label' => 'Apache 2.0',
+			'spdx'  => 'Apache-2.0',
+			'url'   => 'https://www.apache.org/licenses/LICENSE-2.0.txt',
 		],
 		'gpl2'    => [],
 		'gpl3'    => [],
 		'mit'     => [
 			'label' => 'MIT',
 			'spdx'  => 'mit',
-			'url'	=> 'https://opensource.org/licenses/MIT',
+			'url'   => 'https://opensource.org/licenses/MIT',
 		],
 		'private' => [
 			'label' => 'Private. Not for distribution.',
 			'spdx'  => '',
-			'url'	=> '',
+			'url'   => '',
 		],
 		'other'   => [
 			'label' => 'Other (don\'t handle license)',
@@ -74,22 +75,22 @@ abstract class Common extends Base {
 		'gpl2only'  => [
 			'spdx'  => 'GPL-2.0-only',
 			'label' => 'GNU General Public License v2.0 only',
-			'url'	=> 'https://www.gnu.org/licenses/old-licenses/gpl-2.0.txt',
+			'url'   => 'https://www.gnu.org/licenses/old-licenses/gpl-2.0.txt',
 		],
 		'gpl2later' => [
 			'spdx'  => 'GPL-2.0-or-later',
 			'label' => 'GNU General Public License v2.0 or later',
-			'url'	=> 'https://www.gnu.org/licenses/old-licenses/gpl-2.0.txt',
+			'url'   => 'https://www.gnu.org/licenses/old-licenses/gpl-2.0.txt',
 		],
 		'gpl3only'  => [
 			'spdx'  => 'GPL-3.0-only',
 			'label' => 'GNU General Public License v3.0 only',
-			'url'	=> 'https://www.gnu.org/licenses/gpl-3.0.txt',
+			'url'   => 'https://www.gnu.org/licenses/gpl-3.0.txt',
 		],
 		'gpl3later' => [
 			'spdx'  => 'GPL-3.0-or-later',
 			'label' => 'GNU General Public License v3.0 or later',
-			'url'	=> 'https://www.gnu.org/licenses/gpl-3.0.txt',
+			'url'   => 'https://www.gnu.org/licenses/gpl-3.0.txt',
 		],
 	];
 
@@ -101,7 +102,7 @@ abstract class Common extends Base {
 	protected $labelType;
 
 	/**
-	 * 
+	 *
 	 */
 	protected $defaultsType;
 
@@ -129,12 +130,12 @@ abstract class Common extends Base {
 		$this->commonInit();
 
 		// if empty flag value, then handle feature, otherwise if flag is set don't handle
-		$this->handleLicense 	= empty( Utils\get_flag_value( $assoc_args, 'no-license', false ) ) ? true : false;
-		$this->handleReadme 	= empty( Utils\get_flag_value( $assoc_args, 'no-readme', false ) ) ? true : false;
-		$this->handleTests		= empty( Utils\get_flag_value( $assoc_args, 'no-tests', false ) ) ? true : false;
+		$this->handleLicense = empty( Utils\get_flag_value( $assoc_args, 'no-license', false ) ) ? true : false;
+		$this->handleReadme  = empty( Utils\get_flag_value( $assoc_args, 'no-readme', false ) ) ? true : false;
+		$this->handleTests   = empty( Utils\get_flag_value( $assoc_args, 'no-tests', false ) ) ? true : false;
 
-		$this->destination		= ! empty( $i = Utils\get_flag_value( $assoc_args, 'dest', false ) ) ? $this->handleCustomDir( $i ) : $this->destination;
-		$this->templates		= ! empty( $t = Utils\get_flag_value( $assoc_args, 'templates', false ) ) ? $this->handleCustomDir( $t ) : $this->templates;
+		$this->destination = ! empty( $i = Utils\get_flag_value( $assoc_args, 'dest', false ) ) ? $this->handleCustomDir( $i ) : $this->destination;
+		$this->templates   = ! empty( $t = Utils\get_flag_value( $assoc_args, 'templates', false ) ) ? $this->handleCustomDir( $t ) : $this->templates;
 
 		$this->resolveDefaultsType( $assoc_args );
 		$this->namingPrompts();
@@ -151,11 +152,17 @@ abstract class Common extends Base {
 
 		$this->handleConfigFiles();
 
-		if ( $this->handleTests && 'plugins' === $this->type ) {
+		if ( $this->handleTests ) {
 			WP_CLI::add_hook(
 				'after_invoke:replicate plugin',
 				function() {
 					WP_CLI::runcommand( 'scaffold plugin-tests ' . $this->slug );
+				}
+			);
+			WP_CLI::add_hook(
+				'after_invoke:replicate theme',
+				function() {
+					WP_CLI::runcommand( 'scaffold theme-tests ' . $this->slug );
 				}
 			);
 		}
@@ -165,21 +172,22 @@ abstract class Common extends Base {
 	 * Resolves which set of defaults to use -- "user" or "org".
 	 */
 	protected function resolveDefaultsType( $assoc_args ) {
-		if ( 
-			! empty( $type = Utils\get_flag_value( $assoc_args, 'defaults', false ) )
+		if ( ! empty( $type = Utils\get_flag_value( $assoc_args, 'defaults', false ) )
 			&& ( 'user' === $type || 'org' === $type )
 		) {
 			$this->defaultsType = strtoupper( $type ) . '_';
 		} elseif ( ! empty( $this->env['DEFAULTS_TYPE'] ) ) {
 			$this->defaultsType = strtoupper( $this->env['DEFAULTS_TYPE'] ) . '_';
 		} elseif ( // when an 'org_' key is set in env vars, ask which set to use
-			! empty( array_filter(
-				$this->env,
-				function( $key ) {
-					return false !== stripos( $key, 'org_');
-				},
-				ARRAY_FILTER_USE_KEY
-			) )
+			! empty(
+				array_filter(
+					$this->env,
+					function( $key ) {
+						return false !== stripos( $key, 'org_' );
+					},
+					ARRAY_FILTER_USE_KEY
+				)
+			)
 		) {
 			$defaultsTypePrompt = $this->cli->radio( 'Which set of environment variables should be used?', [ 'User', 'Org' ] );
 			$this->defaultsType = strtoupper( $defaultsTypePrompt->prompt() ) . '_';
@@ -237,8 +245,8 @@ abstract class Common extends Base {
 		}
 
 		if ( empty( $this->data['version'] ) ) {
-			$default_version = ! empty( $this->env['DEFAULT_VERSION' ] ) ? $this->env['DEFAULT_VERISON'] : '0.1.0';
-			$version = $this->cli->input( sprintf( '%s Version:', $this->labelType ) ); 
+			$default_version       = ! empty( $this->env['DEFAULT_VERSION'] ) ? $this->env['DEFAULT_VERISON'] : '0.1.0';
+			$version               = $this->cli->input( sprintf( '%s Version:', $this->labelType ) );
 			$this->data['version'] = $version->defaultTo( $default_version )->prompt();
 		}
 
@@ -247,22 +255,22 @@ abstract class Common extends Base {
 
 	protected function authorAndUrlPrompts() {
 
-		if ( empty( $this->env["{$this->defaultsType}GIT_HOST"] ) ) {
-			$git_host = $this->cli->input( 'Which Git host do you use?' );
-			$this->data['creator_git_host'] = $git_host->accept( [ 'github', 'gitlab', 'bitbucket', 'other', 'none'], true )->prompt();
+		if ( empty( $this->env[ "{$this->defaultsType}GIT_HOST" ] ) ) {
+			$git_host                       = $this->cli->input( 'Which Git host do you use?' );
+			$this->data['creator_git_host'] = $git_host->accept( [ 'github', 'gitlab', 'bitbucket', 'other', 'none' ], true )->prompt();
 			if ( 'other' === $this->data['creator_git_host'] ) {
-				$custom_git = $this->cli->input( 'Enter the domain of your Git host:');
+				$custom_git                     = $this->cli->input( 'Enter the domain of your Git host:' );
 				$this->data['creator_git_host'] = $custom_git->prompt();
-			} 
+			}
 		} else {
-			$this->data['creator_git_host'] = $this->env["{$this->defaultsType}GIT_HOST"];
+			$this->data['creator_git_host'] = $this->env[ "{$this->defaultsType}GIT_HOST" ];
 		}
 
 		$prompts = [
-			'creator_name' 				=> '%s Author Name',
-			'creator_email'				=> '%s Author Email',
-			'creator_url'				=> '%s Author URL',
-			'creator_git_username' 		=> 'Git Username',
+			'creator_name'         => '%s Author Name',
+			'creator_email'        => '%s Author Email',
+			'creator_url'          => '%s Author URL',
+			'creator_git_username' => 'Git Username',
 		];
 
 		if ( 'none' === $this->data['git_host'] ) {
@@ -270,19 +278,19 @@ abstract class Common extends Base {
 		}
 
 		foreach ( $prompts as $key => $label ) {
-			${$key}	= $this->cli->input( sprintf( $label . ':', $this->labelType ) );
+			${$key} = $this->cli->input( sprintf( $label . ':', $this->labelType ) );
 			$envKey = $this->defaultsType . strtoupper( str_ireplace( 'creator_', '', $key ) );
 			if ( ! empty( $this->env['ALWAYS_DEFAULTS'] ) && ! empty( $this->env[ $envKey ] ) ) {
 				$this->data[ $key ] = $this->env[ $envKey ];
 			} elseif ( ! empty( $this->env[ $envKey ] ) ) {
-				$this->cli->bold( 'Set custom or hit return to use "'. $this->env[ $envKey ].'" for ' . $key .'...' );
+				$this->cli->bold( 'Set custom or hit return to use "' . $this->env[ $envKey ] . '" for ' . $key . '...' );
 				$this->data[ $key ] = ${$key}->defaultTo( $this->env[ $envKey ] )->prompt();
 			} else {
 				$this->data[ $key ] = ${$key}->prompt();
 			}
 		}
 		if ( 'none' !== $this->data['creator_git_host'] ) {
-			$this->data['creator_git_url'] = 'https://'. $this->data['creator_git_host'] .'.com/' . Utils\trailingslashit( $this->data['creator_git_username'] ) . $this->slug;
+			$this->data['creator_git_url'] = 'https://' . $this->data['creator_git_host'] . '.com/' . Utils\trailingslashit( $this->data['creator_git_username'] ) . $this->slug;
 		}
 	}
 
@@ -295,7 +303,7 @@ abstract class Common extends Base {
 		if ( empty( $this->env['DEFAULT_LICNESE'] ) ) {
 			$license_type = $this->cli->input( 'License Type:' );
 			$selected     = $license_type->accept( array_keys( $this->licenses ), true )->defaultTo( 'gplv3' )->prompt();
-	
+
 			if ( 'gpl2' === $selected || 'gpl3' === $selected ) {
 				$all_licenses                = $this->cli->input( sprintf( 'Use %s only or %s and later versions?', $selected, $selected ) );
 				$selected                    = $selected . $all_licenses->accept( [ 'only', 'later' ], true )->prompt();
@@ -304,24 +312,23 @@ abstract class Common extends Base {
 		} else {
 			$selected = $this->env['DEFAULT_LICENSE'];
 		}
-		
 
 		if ( 'other' !== $selected ) {
 			$this->data['license_spdx']  = $this->licenses[ $selected ]['spdx'];
 			$this->data['license_label'] = $this->licenses[ $selected ]['label'];
-			$this->data['license_url']	 = $this->licenses[ $selected ]['url'];
+			$this->data['license_url']   = $this->licenses[ $selected ]['url'];
 
 			if ( $this->commonFS->has( "licenses/{$selected}.mustache" ) ) {
-				$this->files['LICENSE'] = $this->renderMustacheTemplate( 
-					$this->commonFS->read( "licenses/{$selected}.mustache" ), 
-					$this->data 
+				$this->files['LICENSE'] = $this->renderMustacheTemplate(
+					$this->commonFS->read( "licenses/{$selected}.mustache" ),
+					$this->data
 				);
 			}
 
 			if ( $this->commonFS->has( "licenses/{$selected}-readme.mustache" ) ) {
-				$this->data['license_readme_insert'] = $this->renderMustacheTemplate( 
-					$this->commonFS->read( "licenses/{$selected}-readme.mustache" ), 
-					$this->data 
+				$this->data['license_readme_insert'] = $this->renderMustacheTemplate(
+					$this->commonFS->read( "licenses/{$selected}-readme.mustache" ),
+					$this->data
 				);
 			}
 		}
@@ -332,24 +339,24 @@ abstract class Common extends Base {
 	}
 
 	protected function handleConfigFiles() {
-		$composer_data = $this->replicateJSONFile( 'composer' );
+		$composer_data                = $this->replicateJSONFile( 'composer' );
 		$this->files['composer.json'] = json_encode( $composer_data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES );
 
-		$package_data = $this->replicateJSONFile( 'npm' );
+		$package_data                = $this->replicateJSONFile( 'npm' );
 		$this->files['package.json'] = json_encode( $package_data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES );
 	}
 
 	protected function replicateJSONFile( $type ) {
 		$package = [
-			'name'			=> $this->data['slug'],
-			'version'		=> $this->data['version'],
-			'description'	=> $this->data['desc'],
+			'name'        => $this->data['slug'],
+			'version'     => $this->data['version'],
+			'description' => $this->data['desc'],
 		];
 
 		$author = [
-			'name'	=> $this->data['creator_name'],
-			'email'	=> $this->data['creator_email'],
-			'url'	=> $this->data['creator_url'],
+			'name'  => $this->data['creator_name'],
+			'email' => $this->data['creator_email'],
+			'url'   => $this->data['creator_url'],
 		];
 
 		if ( 'npm' === $type ) {
@@ -374,9 +381,9 @@ abstract class Common extends Base {
 
 		if ( 'npm' === $type ) {
 			if ( ! empty( $this->data['creator_git_url'] ) ) {
-				$package['bugs'] 		= Utils\trailingslashit( $this->data['creator_git_url'] ) . 'bugs';
-				$package['homepage'] 	= $this->data['creator_git_url'];
-				$package['repository']	= $this->data['creator_git_host'] . ':' . $this->data['creator_git_username'] . '/' . $this->data['slug'];
+				$package['bugs']       = Utils\trailingslashit( $this->data['creator_git_url'] ) . 'bugs';
+				$package['homepage']   = $this->data['creator_git_url'];
+				$package['repository'] = $this->data['creator_git_host'] . ':' . $this->data['creator_git_username'] . '/' . $this->data['slug'];
 			}
 		}
 
@@ -393,7 +400,7 @@ abstract class Common extends Base {
 		if ( 'current' === $input ) {
 			return getcwd();
 		}
-		
+
 		return trim( realpath( $input ) );
 	}
 
